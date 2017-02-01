@@ -4,8 +4,7 @@
 import project1.RasterConversion;
 public class Image {
     public static void main(String []args){
-        RasterConversion rs=new RasterConversion("sphere");
-        rs.fillImage();
-        //rs.display(rs.image);
+        RasterConversion rs=new RasterConversion();
+        rs.drawImage();
     }
 }
