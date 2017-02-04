@@ -19,7 +19,7 @@ public class Camera {
     public double []s;
     public double []v2={0.0,0.0,1.0};//vview
     public double []vup={1.0,0.0,0.0};
-    public double []pe={0.0,0.0,-1.0};
+    public double []pe={0.0,0.0,-20.0};
     public double []pc={0.0,0.0,0.0};
     public double []p00;
     public int Xmax=600;
@@ -98,55 +98,81 @@ public class Camera {
         return res;
     }
 
+    public double[] getVectorTwoPoints(double []point1,double []point2){
+        int n=point1.length;
+        double []vec=new double[n];
+        for(int i=0;i<n;++i)
+            vec[i]=point1[i]-point2[i];
+        return vec;
+
+
+    }
+
     public int isInQuadrics(double x,double y){
         double []pp=new double[3];
-        double []ppe=new double[3];
         double []npe=new double[3];
-        double []pec=new double[3];
         for(int i=0;i<3;++i) {
-            pp[i] = p00[i] + x * s[0] * n0[i] + y * s[1] * n1[i];//pp
-            ppe[i]=pp[i]-pe[i];//npe vector
-            pec[i]=pe[i]-pc[i];
+            pp[i] = pc[i] + x * s[0] * n1[i] + y * s[1] * n0[i];//pp
         }
-        getUnitVector(ppe,npe);
+        getUnitVector(getVectorTwoPoints(pp,pe),npe);
 
-        double dotProductN0PE=dotProduct(n0,npe);
-        double dotProductN1PE=dotProduct(n1,npe);
-        double dotProductN2PE=dotProduct(n2,npe);
-        double A=a[0]*(dotProductN0PE/s[0])*(dotProductN0PE/s[0])+a[1]*(dotProductN1PE/s[1])*(dotProductN1PE/s[1])+a[2]*(dotProductN2PE/s[2])*(dotProductN2PE/s[2]);
-        double B=a[0]*2*(dotProductN0PE)*(dotProduct(n0,pec))/(s[0]*s[0])+a[1]*2*(dotProductN1PE)*(dotProduct(n1,pec))/(s[1]*s[1])+a[2]*2*(dotProductN2PE)*(dotProduct(n2,pec))/(s[2]*s[2])+a[3]*dotProduct(n2,npe)/s[2];
-        double C=a[0]*(dotProduct(n0,pec)/s[0])*(dotProduct(n0,pec)/s[0])+a[1]*(dotProduct(n1,pec)/s[1])*(dotProduct(n1,pec)/s[1])+a[2]*(dotProduct(n2,pec)/s[2])*(dotProduct(n2,pec)/s[2])+a[4]+a[3]*(dotProduct(n2,pec))/s[2];
-        // System.out.println(C);
-        double delta=B*B-4*A*C;
+
+        //for sphere (20,20,20), and 100
+        //ray is pe+npet
+        double []center={90.0,90.0,50.0};
+        double B=2*dotProduct(getVectorTwoPoints(pe,center),npe);
+        double C=dotProduct(getVectorTwoPoints(pe,center),getVectorTwoPoints(pe,center))-4000;
+        double delta=B*B-4*C;
         if(delta<0)
             return 0;
-        double sol1=(-B+Math.sqrt(delta))/(2*A);
-        double sol2=(-B-Math.sqrt(delta))/(2*A);
-        System.out.println(sol1+" "+sol2);
-        //return sol1>0 && sol2>0?255:0;
-        return 255;
+        //System.out.println(-B+Math.sqrt(delta));
+        if(-B+Math.sqrt(delta)>=0)
+            return 255;
+        return 0;
+
+
+
+
+
+//        double dotProductN0PE=dotProduct(n0,npe);
+//        double dotProductN1PE=dotProduct(n1,npe);
+//        double dotProductN2PE=dotProduct(n2,npe);
+//        double A=a[0]*(dotProductN0PE/s[0])*(dotProductN0PE/s[0])+a[1]*(dotProductN1PE/s[1])*(dotProductN1PE/s[1])+a[2]*(dotProductN2PE/s[2])*(dotProductN2PE/s[2]);
+//        double B=a[0]*2*(dotProductN0PE)*(dotProduct(n0,pec))/(s[0]*s[0])+a[1]*2*(dotProductN1PE)*(dotProduct(n1,pec))/(s[1]*s[1])+a[2]*2*(dotProductN2PE)*(dotProduct(n2,pec))/(s[2]*s[2])+a[3]*dotProduct(n2,npe)/s[2];
+//        double C=a[0]*(dotProduct(n0,pec)/s[0])*(dotProduct(n0,pec)/s[0])+a[1]*(dotProduct(n1,pec)/s[1])*(dotProduct(n1,pec)/s[1])+a[2]*(dotProduct(n2,pec)/s[2])*(dotProduct(n2,pec)/s[2])+a[4]+a[3]*(dotProduct(n2,pec))/s[2];
+//        // System.out.println(C);
+//        double delta=B*B-4*A*C;
+//        if(delta<0)
+//            return 0;
+//        double sol1=(-B+Math.sqrt(delta))/(2*A);
+//        double sol2=(-B-Math.sqrt(delta))/(2*A);
+//        System.out.println(sol1+" "+sol2);
+//        //return sol1>0 && sol2>0?255:0;
+//        return 255;
     }
 
     public void fillImage(){
         for(int I=0;I<Xmax;++I){
             for(int J=0;J<Ymax;++J){
                 image.setRGB(I,J,0);
-                int sum=0;
-                for(int m=0;m<M;++m){
-                    for(int n=0;n<N;++n){
-                        double x=(I+m/M+rand.nextDouble()/M);
-                        double y=(J+n/N+rand.nextDouble()/N);
-                        sum+=isInQuadrics(x,y);
-                    }
-                }
-                sum/=M*N;
-                if(sum==0)
-                    System.out.println("sum"+sum);
-                int rgb=(255<<24)+(sum<<16);
+//                int sum=0;
+//                for(int m=0;m<M;++m){
+//                    for(int n=0;n<N;++n){
+//                        double x=(I+m/M+rand.nextDouble()/M);
+//                        double y=(J+n/N+rand.nextDouble()/N);
+//                        sum+=isInQuadrics(x,y);
+//                    }
+//                }
+//                sum/=M*N;
+//                if(sum!=255)
+//                    System.out.println("sum"+sum);
+//                int rgb=(255<<24)+(sum<<16);
+                int rgb=(255<<24)+(isInQuadrics(I,J)<<16);
                 image.setRGB(I,J,rgb);
             }
         }
-        writeImage(image,"K:\\sephere.jpg","jpg");
+        //writeImage(image,"sphere.jpg","jpg");
+        display(image);
     }
 
 
